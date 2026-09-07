@@ -49,6 +49,18 @@ final class PasteboardManager: ObservableObject {
         guard pasteboard.changeCount != lastChangeCount else { return }
         lastChangeCount = pasteboard.changeCount
 
-        print("Буфер обмена изменился")
+        if let data = pasteboard.data(forType: .tiff), let image = NSImage(data: data) {
+            items.insert(ClipboardItem(type: .image, image: image, timestamp: Date()), at: 0)
+        } else if let string = pasteboard.string(forType: .string) {
+            let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return }
+    
+            if let url = URL(string: trimmed), url.scheme != nil, trimmed.contains(".") {
+                items.insert(ClipboardItem(type: .url, text: trimmed, url: url, timestamp: Date()), at: 0)
+            } else {
+                items.insert(ClipboardItem(type: .text, text: trimmed, timestamp: Date()), at: 0)
+            }
+        }
     }
 }
+
