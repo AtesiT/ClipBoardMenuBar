@@ -43,18 +43,6 @@ final class PasteboardManager: ObservableObject {
     deinit {
         timer?.invalidate()
     }
-    
-    private func add(_ item: ClipboardItem) {
-        if let last = items.first, last.type == item.type,
-           last.text == item.text,
-           last.image?.tiffRepresentation == item.image?.tiffRepresentation {
-            return
-        }
-        items.insert(item, at: 0)
-        if items.count > 30 {
-            items.removeLast()
-        }
-    }
 
     private func checkPasteboard() {
         let pasteboard = NSPasteboard.general
@@ -74,5 +62,37 @@ final class PasteboardManager: ObservableObject {
             }
         }
     }
-}
 
+    private func add(_ item: ClipboardItem) {
+        if let last = items.first, last.type == item.type,
+           last.text == item.text,
+           last.image?.tiffRepresentation == item.image?.tiffRepresentation {
+            return
+        }
+        items.insert(item, at: 0)
+        if items.count > 30 {
+            items.removeLast()
+        }
+    }
+
+    func copyToPasteboard(_ item: ClipboardItem) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        lastChangeCount = pasteboard.changeCount + 1
+
+        switch item.type {
+        case .text, .url:
+            if let text = item.text {
+                pasteboard.setString(text, forType: .string)
+            }
+        case .image:
+            if let tiff = item.image?.tiffRepresentation {
+                pasteboard.setData(tiff, forType: .tiff)
+            }
+        }
+    }
+
+    func clear() {
+        items.removeAll()
+    }
+}
