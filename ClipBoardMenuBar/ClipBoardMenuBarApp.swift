@@ -3,8 +3,9 @@ import SwiftUI
 @main
 struct ClipBoardMenuBarApp: App {
     var body: some Scene {
-        WindowGroup {
+        MenuBarExtra("ClipBoardMenuBar", systemImage: "doc.on.clipboard") {
             ContentView()
         }
+        .menuBarExtraStyle(.window)
     }
 }
