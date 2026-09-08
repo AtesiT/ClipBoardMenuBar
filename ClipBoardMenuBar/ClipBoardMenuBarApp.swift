@@ -31,16 +31,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func handleClick() {
-        print("HandleClick")
+        guard let event = NSApp.currentEvent else { return }
+
+        if event.type == .rightMouseUp {
+            showContextMenu()
+        } else {
+            togglePopover()
+        }
     }
 
     private func togglePopover() {
-        print("TogglePopover")
+        guard let button = statusItem.button else { return }
+
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
     }
 
     private func showContextMenu() {
         let menu = NSMenu()
-        //  TODO: Меню сделать
+
+        let clearItem = NSMenuItem(title: "Очистить", action: #selector(clearHistory), keyEquivalent: "")
+        clearItem.target = self
+        menu.addItem(clearItem)
+
+        menu.addItem(.separator())
+
+        let quitItem = NSMenuItem(title: "Выход", action: #selector(quit), keyEquivalent: "")
+        quitItem.target = self
+        menu.addItem(quitItem)
+        
+        statusItem.menu = menu
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
     }
 
     @objc private func clearHistory() {
