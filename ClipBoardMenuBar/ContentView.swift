@@ -26,6 +26,45 @@ struct ClipboardItem: Identifiable, Equatable {
     }
 }
 
+struct ClipboardRow: View {
+    let item: ClipboardItem
+
+    var body: some View {
+        HStack(spacing: 10) {
+            switch item.type {
+            case .text:
+                Image(systemName: "doc.text")
+                    .foregroundColor(.secondary)
+                Text(item.text ?? "")
+                    .lineLimit(2)
+                    .font(.system(size: 13))
+
+            case .url:
+                Image(systemName: "link")
+                    .foregroundColor(.blue)
+                Text(item.text ?? "")
+                    .lineLimit(2)
+                    .font(.system(size: 13))
+                    .foregroundColor(.blue)
+
+            case .image:
+                if let image = item.image {
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+                Text("Изображение")
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 struct ContentView: View {
     @StateObject private var manager = PasteboardManager()
     @State private var filter: FilterType = .all
@@ -56,13 +95,25 @@ struct ContentView: View {
                     .padding(.vertical, 30)
             } else {
                 List(filteredItems) { item in
-                    Text(item.text ?? "Изображение")
-                        .lineLimit(2)
+                    ClipboardRow(item: item)
+                        .contentShape(Rectangle())
                         .onTapGesture { copy(item) }
                 }
                 .listStyle(.plain)
                 .frame(height: 300)
             }
+
+            Divider()
+
+            HStack {
+                Button("Очистить") { manager.clear() }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.red)
+                Spacer()
+                Button("Выход") { NSApp.terminate(nil) }
+                    .buttonStyle(.plain)
+            }
+            .padding(10)
         }
         .frame(width: 310)
         .overlay(alignment: .top) {
