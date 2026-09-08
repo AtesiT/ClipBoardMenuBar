@@ -29,6 +29,7 @@ struct ClipboardItem: Identifiable, Equatable {
 struct ContentView: View {
     @StateObject private var manager = PasteboardManager()
     @State private var filter: FilterType = .all
+    @State private var showToast = false
 
     private var filteredItems: [ClipboardItem] {
         switch filter {
@@ -57,15 +58,33 @@ struct ContentView: View {
                 List(filteredItems) { item in
                     Text(item.text ?? "Изображение")
                         .lineLimit(2)
-                        .onTapGesture {
-                            manager.copyToPasteboard(item)
-                        }
+                        .onTapGesture { copy(item) }
                 }
                 .listStyle(.plain)
                 .frame(height: 300)
             }
         }
         .frame(width: 310)
+        .overlay(alignment: .top) {
+            if showToast {
+                Text("Скопировано")
+                    .font(.caption)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.thinMaterial)
+                    .clipShape(Capsule())
+                    .padding(.top, 6)
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    private func copy(_ item: ClipboardItem) {
+        manager.copyToPasteboard(item)
+        withAnimation { showToast = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            withAnimation { showToast = false }
+        }
     }
 }
 
