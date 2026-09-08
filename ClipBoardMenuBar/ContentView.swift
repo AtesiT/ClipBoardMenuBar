@@ -2,6 +2,13 @@ import SwiftUI
 import AppKit
 import Combine
 
+enum FilterType: String, CaseIterable {
+    case all = "Все"
+    case text = "Текст"
+    case image = "Фото"
+    case link = "Ссылки"
+}
+
 enum ClipboardItemType {
     case text, url, image
 }
@@ -21,15 +28,33 @@ struct ClipboardItem: Identifiable, Equatable {
 
 struct ContentView: View {
     @StateObject private var manager = PasteboardManager()
+    @State private var filter: FilterType = .all
+
+    private var filteredItems: [ClipboardItem] {
+        switch filter {
+        case .all: return manager.items
+        case .text: return manager.items.filter { $0.type == .text }
+        case .image: return manager.items.filter { $0.type == .image }
+        case .link: return manager.items.filter { $0.type == .url }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            if manager.items.isEmpty {
+            Picker("", selection: $filter) {
+                ForEach(FilterType.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .padding(8)
+
+            Divider()
+
+            if filteredItems.isEmpty {
                 Text("История пуста")
                     .foregroundColor(.secondary)
                     .padding(.vertical, 30)
             } else {
-                List(manager.items) { item in
+                List(filteredItems) { item in
                     Text(item.text ?? "Изображение")
                         .lineLimit(2)
                         .onTapGesture {
