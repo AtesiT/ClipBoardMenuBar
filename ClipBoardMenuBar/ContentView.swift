@@ -23,8 +23,24 @@ struct ContentView: View {
     @StateObject private var manager = PasteboardManager()
 
     var body: some View {
-        Text("ClipBoardMenuBar")
-            .frame(width: 310, height: 100)
+        VStack(spacing: 0) {
+            if manager.items.isEmpty {
+                Text("История пуста")
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 30)
+            } else {
+                List(manager.items) { item in
+                    Text(item.text ?? "Изображение")
+                        .lineLimit(2)
+                        .onTapGesture {
+                            manager.copyToPasteboard(item)
+                        }
+                }
+                .listStyle(.plain)
+                .frame(height: 300)
+            }
+        }
+        .frame(width: 310)
     }
 }
 
