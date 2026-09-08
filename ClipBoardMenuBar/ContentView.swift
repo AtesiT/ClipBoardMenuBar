@@ -66,7 +66,7 @@ struct ClipboardRow: View {
 }
 
 struct ContentView: View {
-    @StateObject private var manager = PasteboardManager()
+    @ObservedObject var manager: PasteboardManager
     @State private var filter: FilterType = .all
     @State private var showToast = false
 
