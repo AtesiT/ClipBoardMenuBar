@@ -89,19 +89,24 @@ struct ContentView: View {
 
             Divider()
 
-            if filteredItems.isEmpty {
-                Text("История пуста")
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 30)
-            } else {
-                List(filteredItems) { item in
-                    ClipboardRow(item: item)
-                        .contentShape(Rectangle())
-                        .onTapGesture { copy(item) }
+            Group {
+                if filteredItems.isEmpty {
+                    VStack {
+                        Spacer()
+                        Text("История пуста")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                } else {
+                    List(filteredItems) { item in
+                        ClipboardRow(item: item)
+                            .contentShape(Rectangle())
+                            .onTapGesture { copy(item) }
+                    }
+                    .listStyle(.plain)
                 }
-                .listStyle(.plain)
-                .frame(height: 300)
             }
+            .frame(height: 300)
         }
         .frame(width: 310)
         .overlay(alignment: .top) {
