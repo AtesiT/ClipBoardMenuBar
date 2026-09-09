@@ -102,18 +102,6 @@ struct ContentView: View {
                 .listStyle(.plain)
                 .frame(height: 300)
             }
-
-            Divider()
-
-            HStack {
-                Button("Очистить") { manager.clear() }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.red)
-                Spacer()
-                Button("Выход") { NSApp.terminate(nil) }
-                    .buttonStyle(.plain)
-            }
-            .padding(10)
         }
         .frame(width: 310)
         .overlay(alignment: .top) {
