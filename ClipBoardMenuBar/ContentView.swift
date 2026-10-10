@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ImageIO
 import Combine
 
 enum FilterType: String, CaseIterable {
@@ -17,7 +18,8 @@ struct ClipboardItem: Identifiable, Equatable {
     let id = UUID()
     let type: ClipboardItemType
     var text: String?
-    var image: NSImage?
+    var thumbnail: NSImage?
+    var rawImageData: Data?
     var url: URL?
     let timestamp: Date
 
@@ -48,8 +50,8 @@ struct ClipboardRow: View {
                     .foregroundColor(.blue)
 
             case .image:
-                if let image = item.image {
-                    Image(nsImage: image)
+                if let thumbnail = item.thumbnail {
+                    Image(nsImage: thumbnail)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 32, height: 32)
@@ -153,8 +155,9 @@ final class PasteboardManager: ObservableObject {
         guard pasteboard.changeCount != lastChangeCount else { return }
         lastChangeCount = pasteboard.changeCount
 
-        if let data = pasteboard.data(forType: .tiff), let image = NSImage(data: data) {
-            add(ClipboardItem(type: .image, image: image, timestamp: Date()))
+        if let data = pasteboard.data(forType: .tiff) {
+            let thumbnail = Self.makeThumbnail(from: data, maxPixelSize: 128)
+            add(ClipboardItem(type: .image, thumbnail: thumbnail, rawImageData: data, timestamp: Date()))
         } else if let string = pasteboard.string(forType: .string) {
             let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return }
@@ -167,10 +170,26 @@ final class PasteboardManager: ObservableObject {
         }
     }
 
+    private static func makeThumbnail(from data: Data, maxPixelSize: CGFloat) -> NSImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+
+        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+    }
+
     private func add(_ item: ClipboardItem) {
         if let last = items.first, last.type == item.type,
            last.text == item.text,
-           last.image?.tiffRepresentation == item.image?.tiffRepresentation {
+           last.rawImageData == item.rawImageData {
             return
         }
         items.insert(item, at: 0)
@@ -189,14 +208,14 @@ final class PasteboardManager: ObservableObject {
                 pasteboard.setString(text, forType: .string)
             }
         case .image:
-            if let tiff = item.image?.tiffRepresentation {
-                pasteboard.setData(tiff, forType: .tiff)
+            if let data = item.rawImageData {
+                pasteboard.setData(data, forType: .tiff)
             }
         }
 
         lastChangeCount = pasteboard.changeCount
     }
-    
+
     func clear() {
         items.removeAll()
     }
