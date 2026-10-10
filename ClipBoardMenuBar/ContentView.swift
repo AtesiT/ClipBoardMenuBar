@@ -182,7 +182,6 @@ final class PasteboardManager: ObservableObject {
     func copyToPasteboard(_ item: ClipboardItem) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        lastChangeCount = pasteboard.changeCount + 1
 
         switch item.type {
         case .text, .url:
@@ -194,8 +193,10 @@ final class PasteboardManager: ObservableObject {
                 pasteboard.setData(tiff, forType: .tiff)
             }
         }
-    }
 
+        lastChangeCount = pasteboard.changeCount
+    }
+    
     func clear() {
         items.removeAll()
     }
