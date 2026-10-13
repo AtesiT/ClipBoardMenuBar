@@ -156,8 +156,12 @@ final class PasteboardManager: ObservableObject {
         lastChangeCount = pasteboard.changeCount
 
         if let data = pasteboard.data(forType: .tiff) {
-            let thumbnail = Self.makeThumbnail(from: data, maxPixelSize: 128)
-            add(ClipboardItem(type: .image, thumbnail: thumbnail, rawImageData: data, timestamp: Date()))
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                let thumb = Self.makeThumbnail(from: data, maxPixelSize: 128)
+                DispatchQueue.main.async {
+                    self?.add(ClipboardItem(type: .image, thumbnail: thumb, rawImageData: data, timestamp: Date()))
+                }
+            }
         } else if let string = pasteboard.string(forType: .string) {
             let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return }
