@@ -54,22 +54,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showContextMenu() {
         let menu = NSMenu()
-
-        let clearItem = NSMenuItem(title: "Очистить", action: #selector(clearHistory), keyEquivalent: "")
-        clearItem.target = self
-        menu.addItem(clearItem)
-
+        menu.addItem(withTitle: "Очистить", action: #selector(clearHistory), keyEquivalent: "")
+        menu.items.last?.target = self
         menu.addItem(.separator())
+        menu.addItem(withTitle: "Выход", action: #selector(quit), keyEquivalent: "")
+        menu.items.last?.target = self
 
-        let quitItem = NSMenuItem(title: "Выход", action: #selector(quit), keyEquivalent: "")
-        quitItem.target = self
-        menu.addItem(quitItem)
-        
-        statusItem.menu = menu
-        statusItem.button?.performClick(nil)
-        statusItem.menu = nil
+        if let button = statusItem.button {
+            NSMenu.popUpContextMenu(menu, with: NSApp.currentEvent!, for: button)
+        }
     }
-
+    
     @objc private func clearHistory() {
         manager.clear()
     }
