@@ -140,10 +140,14 @@ final class PasteboardManager: ObservableObject {
     private var lastChangeCount = NSPasteboard.general.changeCount
     private var timer: Timer?
 
+    private static let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+
     init() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkPasteboard()
         }
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
     }
 
     deinit {
@@ -155,7 +159,7 @@ final class PasteboardManager: ObservableObject {
         guard pasteboard.changeCount != lastChangeCount else { return }
         lastChangeCount = pasteboard.changeCount
 
-        if let data = pasteboard.data(forType: .tiff) {
+        if let data = pasteboard.data(forType: .tiff) ?? pasteboard.data(forType: .png) {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 let thumb = Self.makeThumbnail(from: data, maxPixelSize: 128)
                 DispatchQueue.main.async {
@@ -166,7 +170,10 @@ final class PasteboardManager: ObservableObject {
             let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return }
 
-            if let url = URL(string: trimmed), url.scheme != nil, trimmed.contains(".") {
+            if let detector = Self.linkDetector,
+               let match = detector.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
+               match.range.length == trimmed.utf16.count,
+               let url = match.url {
                 add(ClipboardItem(type: .url, text: trimmed, url: url, timestamp: Date()))
             } else {
                 add(ClipboardItem(type: .text, text: trimmed, timestamp: Date()))
