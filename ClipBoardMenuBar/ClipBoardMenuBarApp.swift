@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let manager = PasteboardManager()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
         statusItem.button?.target = self
@@ -35,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let event = NSApp.currentEvent else { return }
 
         if event.type == .rightMouseUp {
-            showContextMenu()
+            showContextMenu(with: event)
         } else {
             togglePopover()
         }
@@ -52,7 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func showContextMenu() {
+    private func showContextMenu(with event: NSEvent) {
         let menu = NSMenu()
         menu.addItem(withTitle: "Очистить", action: #selector(clearHistory), keyEquivalent: "")
         menu.items.last?.target = self
@@ -61,10 +63,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.items.last?.target = self
 
         if let button = statusItem.button {
-            NSMenu.popUpContextMenu(menu, with: NSApp.currentEvent!, for: button)
+            NSMenu.popUpContextMenu(menu, with: event, for: button)
         }
     }
-    
+
     @objc private func clearHistory() {
         manager.clear()
     }
