@@ -69,9 +69,10 @@ struct ClipboardRow: View {
 
 struct ContentView: View {
     @ObservedObject var manager: PasteboardManager
+    var onCopy: (() -> Void)? = nil
     @State private var filter: FilterType = .all
     @State private var showToast = false
-
+    
     private var filteredItems: [ClipboardItem] {
         switch filter {
         case .all: return manager.items
@@ -128,8 +129,8 @@ struct ContentView: View {
     private func copy(_ item: ClipboardItem) {
         manager.copyToPasteboard(item)
         withAnimation { showToast = true }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            withAnimation { showToast = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            onCopy?()
         }
     }
 }
