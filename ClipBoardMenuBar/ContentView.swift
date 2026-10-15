@@ -204,7 +204,7 @@ final class PasteboardManager: ObservableObject {
             return
         }
         items.insert(item, at: 0)
-        if items.count > 30 {
+        while items.count > 30 {
             items.removeLast()
         }
     }
