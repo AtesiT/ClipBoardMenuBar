@@ -75,14 +75,22 @@ struct ContentView: View {
     @State private var showToast = false
     
     private var filteredItems: [ClipboardItem] {
+        let base: [ClipboardItem]
         switch filter {
-        case .all: return manager.items
-        case .text: return manager.items.filter { $0.type == .text }
-        case .image: return manager.items.filter { $0.type == .image }
-        case .link: return manager.items.filter { $0.type == .url }
+        case .all: base = manager.items
+        case .text: base = manager.items.filter { $0.type == .text }
+        case .image: base = manager.items.filter { $0.type == .image }
+        case .link: base = manager.items.filter { $0.type == .url }
+        }
+
+        return base.sorted { lhs, rhs in
+            if lhs.isPinned != rhs.isPinned {
+                return lhs.isPinned && !rhs.isPinned
+            }
+            return lhs.timestamp > rhs.timestamp
         }
     }
-
+    
     var body: some View {
         VStack(spacing: 0) {
             Picker("", selection: $filter) {
