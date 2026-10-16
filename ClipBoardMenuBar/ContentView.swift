@@ -22,6 +22,7 @@ struct ClipboardItem: Identifiable, Equatable {
     var rawImageData: Data?
     var url: URL?
     let timestamp: Date
+    var isPinned: Bool = false
 
     static func == (lhs: ClipboardItem, rhs: ClipboardItem) -> Bool {
         lhs.id == rhs.id
@@ -205,11 +206,23 @@ final class PasteboardManager: ObservableObject {
             return
         }
         items.insert(item, at: 0)
+        trimIfNeeded()
+    }
+
+    private func trimIfNeeded() {
         while items.count > 30 {
-            items.removeLast()
+            guard let indexToRemove = items.lastIndex(where: { !$0.isPinned }) else {
+                break
+            }
+            items.remove(at: indexToRemove)
         }
     }
 
+    func togglePin(_ item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index].isPinned.toggle()
+    }
+    
     func copyToPasteboard(_ item: ClipboardItem) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
