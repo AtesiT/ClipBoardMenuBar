@@ -63,6 +63,12 @@ struct ClipboardRow: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
+
+            if item.isPinned {
+                Image(systemName: "pin.fill")
+                    .foregroundColor(.orange)
+                    .font(.system(size: 11))
+            }
         }
         .padding(.vertical, 4)
     }
@@ -114,9 +120,13 @@ struct ContentView: View {
                         ClipboardRow(item: item)
                             .contentShape(Rectangle())
                             .onTapGesture { copy(item) }
+                            .contextMenu {
+                                Button(item.isPinned ? "Открепить" : "Закрепить") {
+                                    manager.togglePin(item)
+                                }
+                            }
                     }
-                    .listStyle(.plain)
-                }
+                    .listStyle(.plain)                }
             }
             .frame(height: 300)
         }
